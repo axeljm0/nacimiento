@@ -1,49 +1,198 @@
-﻿using System;
+using System;
+using System.Globalization;
 
 class Program
-{
+{mn
     static void Main()
     {
-        try
+        bool continuar = true;
+
+        while (continuar)
         {
-            Console.WriteLine("=== CALCULO DEL AÑO DE NACIMIENTO ===\n");
-
-            Console.Write("Por favor, escribe tu nombre: ");
-            string nombre = Console.ReadLine();
-
-            int edad = -1; 
-
-           
-            while (true)
+            try
             {
-                Console.Write("Ahora escribe tu edad: ");
-                string entradaEdad = Console.ReadLine(); 
+                Console.WriteLine("=== CALCULO DEL AÑO Y MES DE NACIMIENTO ===\n");
 
-                if (int.TryParse(entradaEdad, out edad) && edad >= 0 && edad <= 120)
+                string usuario = LeerNombre("Escribe tu nombre: ");
+                Console.Write("¿La consulta es para ti? (si/no): ");
+                string respuesta = Console.ReadLine().Trim().ToLower();
+
+                string nombreConsulta;
+                string parentesco;
+
+                if (respuesta == "si")
                 {
-                    break; 
+                    parentesco = "tú";
+                    nombreConsulta = usuario;
+                }
+                else
+                {
+                    parentesco = LeerNombre("Escribe el parentesco (padre, madre, hijo, etc): ").ToLower();
+                    nombreConsulta = LeerNombre("Escribe el nombre de la persona: ");
                 }
 
-                Console.WriteLine("Error: La edad debe ser un número entre 0 y 120.\n");
-            }
-    
-            int añoActual = DateTime.Now.Year;
-            int añoNacimiento = añoActual - edad;
+                int edad;
 
-            Console.WriteLine("\n---------------------------------");
-            Console.WriteLine($"Hola {nombre}, según los datos:");
-            Console.WriteLine($"• El año actual del sistema es: {añoActual}");
-            Console.WriteLine($"• Tu año aproximado de nacimiento es: {añoNacimiento}");
-            Console.WriteLine("---------------------------------");
+                // Validación especial para padres y madres
+                if (parentesco == "padre" || parentesco == "madre")
+                {
+                    edad = LeerEdadMinima(15);
+                }
+                else
+                {
+                    edad = LeerEdad();
+                }
+
+                DateTime fechaNacimiento;
+
+                // Caso especial: hijo de 0 años → pedir mes de nacimiento
+                if (parentesco == "hijo" && edad == 0)
+                {
+                    int mesNacimiento = LeerMesNacimiento();
+                    fechaNacimiento = CalcularFechaNacimientoPorMes(mesNacimiento);
+
+                    int mesesCalculados = CalcularMesesExactos(fechaNacimiento);
+
+                    Console.WriteLine("\n---------------------------------");
+                    Console.WriteLine($"Según los datos, {nombreConsulta}:");
+                    Console.WriteLine($"• Nació en {ObtenerMes(fechaNacimiento)} {fechaNacimiento.Year}");
+                    Console.WriteLine($"• Actualmente tiene {mesesCalculados} meses.");
+                    Console.WriteLine("---------------------------------");
+                }
+                else if (edad == 0)
+                {
+                    int meses = LeerMeses();
+                    fechaNacimiento = DateTime.Now.AddMonths(-meses);
+
+                    Console.WriteLine("\n---------------------------------");
+                    Console.WriteLine($"Según los datos, {nombreConsulta}:");
+                    Console.WriteLine($"• Tiene {meses} meses.");
+                    Console.WriteLine($"• Nació en {ObtenerMes(fechaNacimiento)} de {fechaNacimiento.Year}");
+                    Console.WriteLine("---------------------------------");
+                }
+                else
+                {
+                    fechaNacimiento = DateTime.Now.AddYears(-edad);
+
+                    Console.WriteLine("\n---------------------------------");
+                    Console.WriteLine($"Según los datos, {nombreConsulta}:");
+                    Console.WriteLine($"• Año aproximado de nacimiento: {fechaNacimiento.Year}");
+                    Console.WriteLine($"• Mes aproximado: {ObtenerMes(fechaNacimiento)}");
+                    Console.WriteLine("---------------------------------");
+                }
+
+                Console.Write("\n¿Deseas realizar otra consulta? (si/no): ");
+                string seguir = Console.ReadLine().Trim().ToLower();
+
+                if (seguir != "si")
+                {
+                    continuar = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error inesperado: {ex.Message}");
+            }
         }
-        catch (Exception ex)
+
+        Console.WriteLine("\nGracias y adiós.");
+    }
+
+    // ==============================
+    // MÉTODOS AUXILIARES
+    // ==============================
+
+    static string LeerNombre(string mensaje)
+    {
+        while (true)
         {
-            Console.WriteLine($"Error inesperado: {ex.Message}");
+            Console.Write(mensaje);
+            string nombre = Console.ReadLine().Trim();
+
+            if (!string.IsNullOrWhiteSpace(nombre))
+                return nombre;
+
+            Console.WriteLine("Error: no puede estar vacío.\n");
         }
-        finally
+    }
+
+    static int LeerEdad()
+    {
+        while (true)
         {
-            Console.WriteLine("\nPresiona ENTER para salir...");
-            Console.ReadLine();
+            Console.Write("Escribe la edad (0–120): ");
+            string entrada = Console.ReadLine();
+
+            if (int.TryParse(entrada, out int edad) && edad >= 0 && edad <= 120)
+                return edad;
+
+            Console.WriteLine("Edad inválida.\n");
         }
+    }
+
+    static int LeerEdadMinima(int minimo)
+    {
+        while (true)
+        {
+            Console.Write($"Escribe la edad del {(minimo == 15 ? "padre/madre" : "adulto")} (mínimo {minimo}): ");
+            string entrada = Console.ReadLine();
+
+            if (int.TryParse(entrada, out int edad) && edad >= minimo)
+                return edad;
+
+            Console.WriteLine($"Error: debe tener al menos {minimo} años.\n");
+        }
+    }
+
+    static int LeerMeses()
+    {
+        while (true)
+        {
+            Console.Write("Escribe los meses (0–11): ");
+            string entrada = Console.ReadLine();
+
+            if (int.TryParse(entrada, out int meses) && meses >= 0 && meses <= 11)
+                return meses;
+
+            Console.WriteLine("Mes inválido.\n");
+        }
+    }
+
+    static int LeerMesNacimiento()
+    {
+        while (true)
+        {
+            Console.Write("Escribe el mes de nacimiento (1–12): ");
+            string entrada = Console.ReadLine();
+
+            if (int.TryParse(entrada, out int mes) && mes >= 1 && mes <= 12)
+                return mes;
+
+            Console.WriteLine("Mes inválido.\n");
+        }
+    }
+
+    static DateTime CalcularFechaNacimientoPorMes(int mesNacimiento)
+    {
+        int year = DateTime.Now.Year;
+        DateTime nacimiento = new DateTime(year, mesNacimiento, 1);
+
+        if (nacimiento > DateTime.Now)
+            nacimiento = nacimiento.AddYears(-1);
+
+        return nacimiento;
+    }
+
+    static int CalcularMesesExactos(DateTime fecha)
+    {
+        DateTime hoy = DateTime.Now;
+        int meses = (hoy.Year - fecha.Year) * 12 + hoy.Month - fecha.Month;
+
+        return meses;
+    }
+
+    static string ObtenerMes(DateTime fecha)
+    {
+        return fecha.ToString("MMMM", new CultureInfo("es-ES"));
     }
 }
