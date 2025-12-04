@@ -45,7 +45,6 @@ class Program
 
                 DateTime fechaNacimiento;
 
-                // Caso especial: hijo de 0 años → pedir mes de nacimiento
                 if (parentesco == "hijo" && edad == 0)
                 {
                     int mesNacimiento = LeerMesNacimiento();
@@ -97,10 +96,6 @@ class Program
 
         Console.WriteLine("\nGracias y adiós.");
     }
-
-    // ==============================
-    // MÉTODOS AUXILIARES
-    // ==============================
 
     static string LeerNombre(string mensaje)
     {
